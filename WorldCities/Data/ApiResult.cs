@@ -17,7 +17,9 @@ namespace WorldCities.Data
             int pageIndex,
             int pageSize,
             string sortColumn,
-            string sortOrder)
+            string sortOrder,
+            string filterColumn ,
+            string filterQuery )
         {
             Data = data;
             TotalCount = count;
@@ -25,6 +27,8 @@ namespace WorldCities.Data
             PageSize = pageSize;
             SortColumn = sortColumn;
             SortOrder = sortOrder;
+            FilterColumn = filterColumn;
+            FilterQuery = filterQuery;
             TotalPages = (int)Math.Ceiling(count / (double)pageSize);
 
         }
@@ -35,6 +39,8 @@ namespace WorldCities.Data
         public int PageSize { get; }
         public string SortColumn { get; }
         public string SortOrder { get; }
+        public string FilterColumn { get; }
+        public string FilterQuery { get; }
         public int TotalPages { get; private set; }
 
         public bool HasPreviousPage
@@ -58,8 +64,14 @@ namespace WorldCities.Data
             int pageIndex,
             int pageSize,
             string sortColumn = null,
-            string sortOrder = null)
+            string sortOrder = null,
+            string filterColumn = null,
+            string filterQuery = null)
         {
+            if (!string.IsNullOrEmpty(filterColumn) && !string.IsNullOrEmpty(filterQuery) && IsValidProperty(filterColumn))
+            {
+                source = source.Where($"{filterColumn}.Contains(@0)",filterQuery);
+            }
             var count = await source.CountAsync();
 
             if (!string.IsNullOrEmpty(sortColumn) && IsValidProperty(sortColumn))
@@ -81,7 +93,9 @@ namespace WorldCities.Data
                 pageIndex,
                 pageSize,
                 sortColumn,
-                sortOrder);
+                sortOrder,
+                filterColumn,
+                filterQuery);
         }
 
         private static bool IsValidProperty(string propertyName,
