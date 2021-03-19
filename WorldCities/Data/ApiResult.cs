@@ -98,7 +98,7 @@ namespace WorldCities.Data
                 filterQuery);
         }
 
-        private static bool IsValidProperty(string propertyName,
+        public static bool IsValidProperty(string propertyName,
             bool throwExceptionIfNotFound = true)
         {
             var prop = typeof(T).GetProperty(propertyName,
