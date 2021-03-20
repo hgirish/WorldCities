@@ -3,6 +3,8 @@ import { Component, Inject, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Country } from './country';
 
 @Component({
@@ -14,18 +16,18 @@ export class CountriesComponent implements OnInit {
   public displayedColumns: string[] = ['id', 'name', 'iso2', 'iso3'];
   public countries: MatTableDataSource<Country>;
 
-  defaultPageIndex: number = 0;
-  defaultPageSize: number = 10;
-  public defaultSortColumn: string = "name";
-  public defaultSortOrder: string = "asc";
+  defaultPageIndex = 0;
+  defaultPageSize = 10;
+  public defaultSortColumn = "name";
+  public defaultSortOrder = "asc";
 
-  defaultFilterColumn: string = "name";
+  defaultFilterColumn = "name";
   filterQuery: string = null;
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
 
-
+  filterTextChanged: Subject<string> = new Subject<string>();
 
   constructor(
     private http: HttpClient,
@@ -36,8 +38,19 @@ export class CountriesComponent implements OnInit {
     this.loadData(null);
   }
 
+  onFilterTextChanged(filterText: string) {
+    if (this.filterTextChanged.observers.length === 0) {
+      this.filterTextChanged
+        .pipe(debounceTime(1000), distinctUntilChanged())
+        .subscribe(query => {
+          this.loadData(query);
+        });
+    }
+    this.filterTextChanged.next(filterText);
+  }
+
   loadData(query: string = null) {
-    var pageEvent = new PageEvent();
+    const pageEvent = new PageEvent();
     pageEvent.pageIndex = this.defaultPageIndex;
     pageEvent.pageSize = this.defaultPageSize;
     if (query) {
